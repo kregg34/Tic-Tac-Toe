@@ -11,7 +11,6 @@ EMPTY, X, O
 
 State board[BOARD_SIZE][BOARD_SIZE];
 State currTurn = X;
-State sideOfAI;
 
 void initBoard();
 void playTwoPlayer();
