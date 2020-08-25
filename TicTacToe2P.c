@@ -1,26 +1,25 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
 
-const int BOARD_SIZE = 3;
+#define BOARD_SIZE 3
 
 typedef enum {
 EMPTY, X, O
 } State;
 
-State board[3][3];
+State board[BOARD_SIZE][BOARD_SIZE];
 State currTurn = X;
 State sideOfAI;
-int numTurns = 0;
 
 void initBoard();
-int getSelectedOption();
 void playTwoPlayer();
 void getPlayersMove(int* row, int* col);
-void playAgainstAI();
-void getAIMove(int* row, int* col);
-void pickSide();
 void makeMove(int row, int col);
+int checkDraw();
 int gameFinished(int row, int col);
+void getLineBreak(char lineBreak[]);
 void printBoard();
 void updateBoard(int row, int col);
 void changeTurn();
@@ -29,16 +28,7 @@ int checkWin(int row, int col);
 
 int main(){
 	initBoard();
-	
-	puts("\nOptions:\nType \"1\" to play two-player.\nType \"2\" to play against an AI.");
-	int selectedOption = getSelectedOption();
-	
-	if(selectedOption == 1){
-		playTwoPlayer();
-	}else{
-		pickSide();
-		playAgainstAI();
-	}
+	playTwoPlayer();
 
 	return EXIT_SUCCESS;
 }
@@ -48,30 +38,6 @@ void initBoard(){
 	for(int i = 0; i < BOARD_SIZE; i++){
 		for(int j = 0; j < BOARD_SIZE; j++){
 			board[i][j] = EMPTY;
-		}
-	}
-}
-
-
-int getSelectedOption(){
-	int selectedOption;
-	while(1){
-		if(scanf("%d", &selectedOption) == 1){
-			if(selectedOption == 1){
-				puts("You selected to play two-player.");
-				return 1;
-			}else if(selectedOption == 2){
-				puts("You selected to play against an AI.");
-				return 2;
-			}else{
-				fseek(stdin,0,SEEK_END);
-				puts("Invalid option!");
-				continue;
-			}
-		}else{
-			fseek(stdin,0,SEEK_END);
-			puts("Invalid value.");
-			continue;
 		}
 	}
 }
@@ -98,59 +64,6 @@ void playTwoPlayer(){
 }
 
 
-void pickSide(){
-	puts("\nOptions:\nType 1 to play first.\nType 2 to play second.");
-	int selectedSide;
-	while(1){
-		if(scanf("%d", &selectedSide) == 1){
-			if(selectedSide == 1){
-				sideOfAI = O;
-				break;
-			}else if(selectedSide == 2){
-				sideOfAI = X;
-				break;
-			}else{
-				fseek(stdin,0,SEEK_END);
-				puts("Invalid value.");
-				continue;
-			}
-		}else{
-			fseek(stdin,0,SEEK_END);
-			puts("Invalid value.");
-			continue;
-		}
-	}
-}
-
-
-void playAgainstAI(){
-	int row, col;
-	while(1){
-		if(currTurn != sideOfAI){
-			puts("Your turn!");
-			getPlayersMove(&row, &col);
-		}else{
-			puts("The AI is thinking...!");
-			getAIMove(&row, &col);
-		}
-			
-		makeMove(row, col);
-		
-		if(gameFinished(row, col) == 1){
-			break;
-		}
-		
-		changeTurn();
-	}
-}
-
-
-// Uses a backtracking algorithm
-void getAIMove(int* row, int* col){
-	
-}
-
-
 void makeMove(int row, int col){
 	updateBoard(row - 1, col - 1);
 	printBoard();
@@ -167,8 +80,7 @@ int gameFinished(int row, int col){
 		return 1;
 	}
 	
-	numTurns++;
-	if(numTurns == 9){
+	if(checkDraw(board) == 1){
 		puts("\n\nThe game is a draw!\n");
 		return 1;
 	}
@@ -182,7 +94,10 @@ void getPlayersMove(int* row, int* col){
 	while(1){
 		if(scanf("%d %d", row, col) == 2){
 			if(*row > BOARD_SIZE || *col > BOARD_SIZE || *row < 1 || *col < 1){
-				puts("Invalid row or column. Values must be between 1 and 3.");
+				printf("Invalid row or column. Values must be between 1 and %d.\n", BOARD_SIZE);
+				continue;
+			}else if(isFilled(*row - 1, *col - 1)){
+				puts("That square is filled.");
 				continue;
 			}else{
 				break;
@@ -190,11 +105,6 @@ void getPlayersMove(int* row, int* col){
 		}else{
 			fseek(stdin,0,SEEK_END);
 			puts("Invalid value.");
-			continue;
-		}
-		
-		if(isFilled(*row - 1, *col - 1)){
-			puts("That square is filled.");
 			continue;
 		}
 	}
@@ -212,6 +122,9 @@ void changeTurn(){
 
 void printBoard(){
 	puts("");
+	char lineBreak[BOARD_SIZE * 4] = "";
+	getLineBreak(lineBreak);
+	
 	for(int i = 0; i < BOARD_SIZE; i++){
 		printf("      ");
 		for(int j = 0; j < BOARD_SIZE; j++){
@@ -231,10 +144,18 @@ void printBoard(){
 			}
 		}
 		if(i != BOARD_SIZE - 1){
-			printf("\n      ----------\n");
+			printf("\n      %s\n", lineBreak);
 		}
 	}
 	puts("");
+}
+
+
+void getLineBreak(char lineBreak[]){
+	int amount = floor(BOARD_SIZE * 3.85);
+	for(int i = 0; i < amount; i++){
+		strcat(lineBreak, "-");
+	}
 }
 
 
@@ -252,6 +173,24 @@ int isFilled(int row, int col){
 		return 0;
 	}else{
 		return 1;
+	}
+}
+
+
+int checkDraw(){
+	int numFilled = 0;
+	for(int i = 0; i < BOARD_SIZE; i++){
+		for(int j = 0; j < BOARD_SIZE; j++){
+			if(board[i][j] != EMPTY){
+				numFilled++;
+			}
+		}
+	}
+	
+	if(numFilled >= 9){
+		return 1;
+	}else{
+		return 0;
 	}
 }
 
@@ -280,7 +219,8 @@ int checkWin(int row, int col){
 		}
 	}
 	
-	if(horiCount == 3 || vertCount == 3 || diag1Count == 3 || diag2Count == 3){
+	if(horiCount == BOARD_SIZE || vertCount == BOARD_SIZE ||
+	diag1Count == BOARD_SIZE || diag2Count == BOARD_SIZE){
 		return 1;
 	}else{
 		return 0;
