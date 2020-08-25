@@ -152,6 +152,7 @@ void printBoard(){
 
 
 void getLineBreak(char lineBreak[]){
+	// Roughly 3.85 dashs per block
 	int amount = floor(BOARD_SIZE * 3.85);
 	for(int i = 0; i < amount; i++){
 		strcat(lineBreak, "-");
@@ -169,7 +170,7 @@ void updateBoard(int row, int col){
 
 
 int isFilled(int row, int col){
-	if(board[row][col] == 0){
+	if(board[row][col] == EMPTY){
 		return 0;
 	}else{
 		return 1;
@@ -178,20 +179,15 @@ int isFilled(int row, int col){
 
 
 int checkDraw(){
-	int numFilled = 0;
 	for(int i = 0; i < BOARD_SIZE; i++){
 		for(int j = 0; j < BOARD_SIZE; j++){
-			if(board[i][j] != EMPTY){
-				numFilled++;
+			if(board[i][j] == EMPTY){
+				return 0;
 			}
 		}
 	}
 	
-	if(numFilled >= 9){
-		return 1;
-	}else{
-		return 0;
-	}
+	return 1;
 }
 
 
